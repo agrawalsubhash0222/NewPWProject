@@ -16,13 +16,14 @@ pipeline {
   stages {
     stage('Install') {
       steps {
+        bat 'if exist allure-results rmdir /s /q allure-results'
         bat 'npm ci'
         bat 'npx playwright install chromium'
       }
     }
     stage('Test') {
       steps {
-        bat "npx playwright test ${params.TAG == 'all' ? '' : '--grep ' + params.TAG} --reporter=list,html,junit"
+        bat "npx playwright test ${params.TAG == 'all' ? '' : '--grep ' + params.TAG} --reporter=list,html,junit,allure-playwright"
       }
     }
   }
@@ -31,6 +32,7 @@ pipeline {
     always {
       junit testResults: 'results/junit.xml', allowEmptyResults: true
       archiveArtifacts artifacts: 'playwright-report/**, test-results/**', allowEmptyArchive: true
+      allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
     }
   }
 }
